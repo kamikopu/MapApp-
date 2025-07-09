@@ -396,7 +396,7 @@ class App {
     this._del(e);
     console.log(e.target);
     console.log(e);
-    //如果长按的话就全部删除的功能 好像在这个位置很难实现
+    
   }
 
   _setLocalStorage() {
@@ -531,17 +531,34 @@ class App {
   //表格排序的函数
   _formSortFun(e) {
     e.preventDefault();
-    const kmFar = this.#workouts.sort((obja, objb) => {
-      Number(obja.distance) < Number(objb.distance);
-    });
-    console.log(kmFar);
     
+    //创造新的以排序的数组    //bug为sort直接改变了原数组 要复制之后再在副本上sort
+    
+    let kmFars = structuredClone(this.#workouts)
+    
+    console.log(kmFars)
+
+    const  kmFar = kmFars.sort((obja, objb) => {
+      return Number(obja.distance) - Number(objb.distance);
+    });
+
+    document.querySelectorAll(".workout").forEach((el)=>{
+      el.remove()
+    })
+    
+    //判断是否开启了排序开关并排序渲染
     if (e.target.value === 'naturalOrdering') {
+     this.#workouts.forEach((obj)=>{
+      this._renderWorkout(obj)
+     })
       
     }
     if (e.target.value === 'farthestDistance') {
-    
+     kmFar.forEach((obj)=>{
+      this._renderWorkout(obj)
+     })
     }
+    console.log(this.#workouts)
   }
 }
 
