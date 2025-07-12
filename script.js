@@ -39,6 +39,7 @@ const containerWorkouts = document.querySelector('.workouts');
 const addNewData = document.querySelector('.add-new-data');
 
 const formSort = document.querySelector('.form-sort');
+const oneClickBoundsBun = document.querySelector('.one-click-bounds')
 
 // 数据模型
 class Workout {
@@ -162,6 +163,9 @@ class App {
     this._getLocalStorage();
     // 绑定本地存储对象到类实例
     this._bindWorkouts();
+
+    //一键展示所有地图的点
+    oneClickBoundsBun.addEventListener("click",this._oneClickBoundsFun.bind(this))
 
     console.log(this.#workouts);
   }
@@ -559,6 +563,21 @@ class App {
      })
     }
     console.log(this.#workouts)
+  }
+
+  _oneClickBoundsFun(){
+    
+    //计算出包含所有给定经纬度的最小矩形
+    const bounds = L.latLngBounds(this.#workouts.map((obj)=> {
+        return obj.coords
+      }))
+    //调用
+      this.#map.fitBounds(bounds,{
+        padding:[20,20],  //四周留白的
+        maxZoom:16   //设置最大的
+      });
+    
+   
   }
 }
 
