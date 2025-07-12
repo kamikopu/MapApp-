@@ -247,6 +247,28 @@ a:visited {
   transition: background-color 0.3s ease, transform 0.3s ease; /* 添加平滑过渡 */
 }
 
+.one-click-bounds{
+   position: fixed; /* 固定按钮 */
+  top: 40%; /* 距离顶部的百分比，可根据需要调整 */
+  left: 1rem; /* 距离左边的距离 */
+  z-index: 10; /* 确保按钮不被其他元素覆盖 */
+  background-color: var(--color-brand--1); /* 设置背景色 */
+  color: #fff; /* 按钮文字颜色 */
+  border: none; /* 去掉默认边框 */
+  border-radius: 50%; /* 圆形按钮 */
+  width: 4rem; /* 按钮宽度 */
+  height: 4rem; /* 按钮高度 */
+  font-size: 2rem; /* 字体大小 */
+  cursor: pointer; /* 鼠标样式 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* 按钮阴影 */
+  transition: background-color 0.3s ease, transform 0.3s ease; /* 添加平滑过渡 */
+}
+
+.one-click-bounds:hover{
+   background-color: var(--color-brand--2); /* 悬停时背景色变化 */
+  transform: 1s;
+}
+
 .add-new-data:hover {
   background-color: var(--color-brand--2); /* 悬停时背景色变化 */
   transform: 1s;
