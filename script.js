@@ -39,7 +39,7 @@ const containerWorkouts = document.querySelector('.workouts');
 const addNewData = document.querySelector('.add-new-data');
 
 const formSort = document.querySelector('.form-sort');
-const oneClickBoundsBun = document.querySelector('.one-click-bounds')
+const oneClickBoundsBun = document.querySelector('.one-click-bounds');
 
 // 数据模型
 class Workout {
@@ -165,7 +165,10 @@ class App {
     this._bindWorkouts();
 
     //一键展示所有地图的点
-    oneClickBoundsBun.addEventListener("click",this._oneClickBoundsFun.bind(this))
+    oneClickBoundsBun.addEventListener(
+      'click',
+      this._oneClickBoundsFun.bind(this)
+    );
 
     console.log(this.#workouts);
   }
@@ -400,7 +403,6 @@ class App {
     this._del(e);
     console.log(e.target);
     console.log(e);
-    
   }
 
   _setLocalStorage() {
@@ -535,49 +537,47 @@ class App {
   //表格排序的函数
   _formSortFun(e) {
     e.preventDefault();
-    
-    //创造新的以排序的数组    //bug为sort直接改变了原数组 要复制之后再在副本上sort
-    
-    let kmFars = structuredClone(this.#workouts)
-    
-    console.log(kmFars)
 
-    const  kmFar = kmFars.sort((obja, objb) => {
+    //创造新的以排序的数组    //bug为sort直接改变了原数组 要复制之后再在副本上sort
+
+    let kmFars = structuredClone(this.#workouts);
+
+    console.log(kmFars);
+
+    const kmFar = kmFars.sort((obja, objb) => {
       return Number(obja.distance) - Number(objb.distance);
     });
 
-    document.querySelectorAll(".workout").forEach((el)=>{
-      el.remove()
-    })
-    
+    document.querySelectorAll('.workout').forEach(el => {
+      el.remove();
+    });
+
     //判断是否开启了排序开关并排序渲染
     if (e.target.value === 'naturalOrdering') {
-     this.#workouts.forEach((obj)=>{
-      this._renderWorkout(obj)
-     })
-      
+      this.#workouts.forEach(obj => {
+        this._renderWorkout(obj);
+      });
     }
     if (e.target.value === 'farthestDistance') {
-     kmFar.forEach((obj)=>{
-      this._renderWorkout(obj)
-     })
+      kmFar.forEach(obj => {
+        this._renderWorkout(obj);
+      });
     }
-    console.log(this.#workouts)
+    console.log(this.#workouts);
   }
 
-  _oneClickBoundsFun(){
-    
+  _oneClickBoundsFun() {
     //计算出包含所有给定经纬度的最小矩形
-    const bounds = L.latLngBounds(this.#workouts.map((obj)=> {
-        return obj.coords
-      }))
+    const bounds = L.latLngBounds(
+      this.#workouts.map(obj => {
+        return obj.coords;
+      })
+    );
     //调用
-      this.#map.fitBounds(bounds,{
-        padding:[20,20],  //四周留白的
-        maxZoom:16   //设置最大的
-      });
-    
-   
+    this.#map.fitBounds(bounds, {
+      padding: [20, 20], //四周留白的
+      maxZoom: 16, //设置最大的
+    });
   }
 }
 
