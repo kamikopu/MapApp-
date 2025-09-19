@@ -45,11 +45,11 @@ const oneClickBoundsBun = document.querySelector('.one-click-bounds');
 class Workout {
   date = new Date();
   id = new Date().getTime() + ''.slice(-10);
-  constructor(coords, distance, duration, lineArr) {
+  constructor(coords, distance, duration, lineArr = []) {
     this.coords = coords; // [lat, lng]
     this.distance = distance; // in km
     this.duration = duration; // in min
-    this.lineArr = lineArr;
+    this.lineArr = lineArr; // 保存画线数据的数组
   }
 
   _setDescription() {
@@ -96,12 +96,6 @@ class Cycling extends Workout {
 
 // ---------------- 应用主类 ----------------
 
-//测试数据
-let testLatlngs = [
-  [45.51, -122.68],
-  [37.77, -122.43],
-  [34.04, -118.2],
-];
 let testPolyline;
 
 let testData = false;
@@ -171,6 +165,12 @@ class App {
       this._longPressMousedoenFun.bind(this)
     );
 
+    //添加按键删除的事件监听器
+    window.addEventListener('keydown', this._deleteLineFunction.bind(this));
+
+    //添加路线保存功能的测试事件触发器 测试完毕后删除
+    window.addEventListener('keydown', this._testFun.bind(this));
+
     // 加载本地存储数据
     this._getLocalStorage();
     // 绑定本地存储对象到类实例
@@ -211,9 +211,6 @@ class App {
 
     // 地图加载后，绘制已有数据的标记
     this._reMapPint();
-
-    //在地图上画线
-    this._drawLine();
   }
 
   _showForm(mapE) {
@@ -288,6 +285,7 @@ class App {
         return alert('Inputs have to be positive numbers!');
       workout = new Running([lat, lng], distance, duration, cadence);
     }
+
     if (type === 'cycling') {
       const elevation = manualForm.classList.contains('hidden')
         ? +inputElevation.value
@@ -302,6 +300,13 @@ class App {
 
     // 添加到工作数据数组中
     this.#workouts.push(workout);
+
+    //在此位置添加在输入完数据后的在地图上画线的步骤
+    //在地图上画线
+    workout.lineArr.push([lat, lng]);
+    console.log(workout);
+
+    this._drawLine(workout);
 
     // 在地图上渲染标记
     this._renderWorkoutMarker(workout);
@@ -580,16 +585,27 @@ class App {
     });
   }
 
-  _drawLine() {
+  //                            以下为地图画线的代码
+  _drawLine(workout) {
     // 测试在地域上画线的参照代码
+    console.log(workout);
 
-    testPolyline = L.polyline(testLatlngs, { color: 'red' }).addTo(this.#map);
+    testPolyline = L.polyline(workout.lineArr, { color: 'red' }).addTo(
+      this.#map
+    );
     // console.log(Date.now()) 显示的是以毫秒表示的现在的时间
 
     // 将视图缩放到折线范围
-    this.#map.on('mousemove', this._onMouseMove.bind(this));
-    //点击就把现在的地图上的坐标追加到数组
-    this.#map.on('click', this._addTestLatlngs.bind(this));
+    // this.#map.on('mousemove', this._onMouseMove.bind(this, workout));
+    // //点击就把现在的地图上的坐标追加到数组
+    // this.#map.on('click', this._addTestLatlngs.bind(this, workout));
+
+    this._onMouseMoveHandler = this._onMouseMove.bind(this, workout);
+
+    this._addTestLatlngsHandler = this._addTestLatlngs.bind(this, workout);
+
+    this.#map.on('mousemove', this._onMouseMoveHandler);
+    this.#map.on('click', this._addTestLatlngsHandler);
 
     this.#map.fitBounds(testPolyline.getBounds(), {
       padding: [50, 50],
@@ -597,19 +613,42 @@ class App {
     });
   }
 
-  _onMouseMove(e) {
+  _onMouseMove(workout, e) {
     const now = Date.now();
     if (now - this.#lastTime > 20) {
       this.#lastTime = now;
-      console.log(e.latlng.lat);
-      console.log(e.latlng.lng);
-      testLatlngs[testLatlngs.length - 1] = [e.latlng.lat, e.latlng.lng];
-      testPolyline.setLatLngs(testLatlngs); //不把线永远留在图层中 只是实时显示
+      // console.log(e.latlng.lat);
+      // console.log(e.latlng.lng);
+      // console.log(workout, e);
+      workout.lineArr[workout.lineArr.length - 1] = [
+        e.latlng.lat,
+        e.latlng.lng,
+      ];
+      testPolyline.setLatLngs(workout.lineArr); //不把线永远留在图层中 只是实时显示
     }
   }
+
   //   用作给画线功能的数组追加坐标
-  _addTestLatlngs(e) {
-    testLatlngs.push([e.latlng.lat, e.latlng.lng]);
+  _addTestLatlngs(workout, e) {
+    workout.lineArr.push([e.latlng.lat, e.latlng.lng]);
+  }
+
+  _deleteLineFunction(e) {
+    if (e.key !== 'q') return;
+    this.#map.off('mousemove', this._onMouseMoveHandler);
+    this.#map.off('click', this._addTestLatlngsHandler);
+    this._setLocalStorage();
+  }
+
+  // 测试函数 在修好画线储存问题之前不用管
+  _testFun(e) {
+    // testPolyline = L.polyline(this.#workouts[0].lineArr, {
+    //   color: 'red',
+    // }).addTo(this.#map);
+    //  this.#map.fitBounds(testPolyline.getBounds(), {
+    //   padding: [50, 50],
+    //   maxZom: 11,
+    // });
   }
 }
 
