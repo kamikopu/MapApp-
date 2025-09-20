@@ -96,8 +96,6 @@ class Cycling extends Workout {
 
 // ---------------- 应用主类 ----------------
 
-let testPolyline;
-
 let testData = false;
 
 class App {
@@ -114,10 +112,14 @@ class App {
   #localStorageGet;
   #elementAll;
   #lastTime;
+  #currentData;
+  #testPolyline;
+  #isShowLine;
 
   constructor() {
     this.#workouts = [];
     this.#lastTime = 0;
+    this.#isShowLine = false;
 
     // 切换显示手动输入表单
     addNewData.addEventListener('click', () => {
@@ -169,7 +171,7 @@ class App {
     window.addEventListener('keydown', this._deleteLineFunction.bind(this));
 
     //添加路线保存功能的测试事件触发器 测试完毕后删除
-    window.addEventListener('keydown', this._testFun.bind(this));
+    window.addEventListener('keydown', this._clickToShowTheLine.bind(this));
 
     // 加载本地存储数据
     this._getLocalStorage();
@@ -399,13 +401,15 @@ class App {
     const workout = this.#workouts.find(
       work => work.id === workoutEl.dataset.id
     );
+    //把点击的记录的信息记录条设置为全局
+    this.#currentData = workout;
     this.#map.setView(workout.coords, 13, {
       animate: true,
       pan: { duration: 1 },
     });
 
     // 这里调用 click()（可选：用于统计点击次数）
-    workout.click();
+    workout || workout.click();
 
     // 处理删除功能
     this._del(e);
@@ -450,7 +454,6 @@ class App {
 
     element.classList.add('hidden');
     setTimeout(() => element.remove(), 1000);
-    //如果长按删除按钮的话就删除全部的记录条方法
 
     //更新储存 因该在函数最后
     this._setLocalStorage();
@@ -478,8 +481,6 @@ class App {
 
   //长按下鼠标左键的处理
   _longPressMouseupFun(e) {
-    //  window.addEventListener('mouseup', function (e) {
-
     if (e.target.classList.contains('del')) {
       e.stopPropagation();
       if (!this.startWithPressDelButton) return;
@@ -503,7 +504,6 @@ class App {
 
   //抬起左键的处理
   _longPressMousedoenFun(e) {
-    // window.addEventListener('mousedown', function (e) {
     if (this.turnNumberBoolean) return;
     if (e.target.classList.contains('del') && !this.intervalTimeLongPress) {
       e.stopPropagation();
@@ -588,17 +588,14 @@ class App {
   //                            以下为地图画线的代码
   _drawLine(workout) {
     // 测试在地域上画线的参照代码
-    console.log(workout);
-
-    testPolyline = L.polyline(workout.lineArr, { color: 'red' }).addTo(
+    //如果要是
+    if (this.#isShowLine) {
+      this.#map.removeLayer(this.#testPolyline);
+    }
+    this.#testPolyline = L.polyline(workout.lineArr, { color: 'red' }).addTo(
       this.#map
     );
-    // console.log(Date.now()) 显示的是以毫秒表示的现在的时间
-
-    // 将视图缩放到折线范围
-    // this.#map.on('mousemove', this._onMouseMove.bind(this, workout));
-    // //点击就把现在的地图上的坐标追加到数组
-    // this.#map.on('click', this._addTestLatlngs.bind(this, workout));
+    this.#isShowLine = true;
 
     this._onMouseMoveHandler = this._onMouseMove.bind(this, workout);
 
@@ -607,7 +604,7 @@ class App {
     this.#map.on('mousemove', this._onMouseMoveHandler);
     this.#map.on('click', this._addTestLatlngsHandler);
 
-    this.#map.fitBounds(testPolyline.getBounds(), {
+    this.#map.fitBounds(this.#testPolyline.getBounds(), {
       padding: [50, 50],
       maxZom: 11,
     });
@@ -624,7 +621,7 @@ class App {
         e.latlng.lat,
         e.latlng.lng,
       ];
-      testPolyline.setLatLngs(workout.lineArr); //不把线永远留在图层中 只是实时显示
+      this.#testPolyline.setLatLngs(workout.lineArr); //不把线永远留在图层中 只是实时显示
     }
   }
 
@@ -640,15 +637,19 @@ class App {
     this._setLocalStorage();
   }
 
-  // 测试函数 在修好画线储存问题之前不用管
-  _testFun(e) {
-    // testPolyline = L.polyline(this.#workouts[0].lineArr, {
-    //   color: 'red',
-    // }).addTo(this.#map);
-    //  this.#map.fitBounds(testPolyline.getBounds(), {
-    //   padding: [50, 50],
-    //   maxZom: 11,
-    // });
+  //显示当前选择的运动记录的线
+  _clickToShowTheLine(e) {
+    if (e.key !== 'L' || !this.#currentData) return;
+
+    if (this.#isShowLine) {
+      this.#map.removeLayer(this.#testPolyline);
+      this.#isShowLine = false;
+    } else {
+      this.#testPolyline = L.polyline(this.#currentData.lineArr, {
+        color: 'red',
+      }).addTo(this.#map);
+      this.#isShowLine = true;
+    }
   }
 }
 
