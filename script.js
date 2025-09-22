@@ -41,6 +41,8 @@ const addNewData = document.querySelector('.add-new-data');
 const formSort = document.querySelector('.form-sort');
 const oneClickBoundsBun = document.querySelector('.one-click-bounds');
 
+const polyLine = document.querySelector('.poly-line');
+
 // 数据模型
 class Workout {
   date = new Date();
@@ -115,11 +117,17 @@ class App {
   #currentData;
   #testPolyline;
   #isShowLine;
+  #isShowPolyLine;
+  #lineX;
+  #lineY;
 
   constructor() {
     this.#workouts = [];
     this.#lastTime = 0;
     this.#isShowLine = false;
+    this.#isShowPolyLine = false;
+    this.#lineX = [];
+    this.#lineY = [];
 
     // 切换显示手动输入表单
     addNewData.addEventListener('click', () => {
@@ -141,10 +149,9 @@ class App {
     });
 
     // 当网页第一次加载时或唤起该函数时返回当前的全部运动表格的elment
-    window.addEventListener('load', function (e) {
+    window.addEventListener('load', e => {
       if (document.querySelectorAll('.workout')) {
         this.elementAll = document.querySelectorAll('.workout');
-        console.log(elementAll);
       }
     });
 
@@ -173,6 +180,9 @@ class App {
     //添加路线保存功能的测试事件触发器 测试完毕后删除
     window.addEventListener('keydown', this._clickToShowTheLine.bind(this));
 
+    //添加图线表视窗的的出现和消失反应
+    window.addEventListener('keydown', this._polyLineShow.bind(this));
+
     // 加载本地存储数据
     this._getLocalStorage();
     // 绑定本地存储对象到类实例
@@ -184,7 +194,8 @@ class App {
       this._oneClickBoundsFun.bind(this)
     );
 
-    console.log(this.#workouts);
+    //折线函数启用
+    this._polyLineFun();
   }
 
   _getPosition() {
@@ -609,7 +620,7 @@ class App {
       maxZom: 11,
     });
   }
-
+  //线跟着鼠标动的动画函数
   _onMouseMove(workout, e) {
     const now = Date.now();
     if (now - this.#lastTime > 20) {
@@ -630,6 +641,7 @@ class App {
     workout.lineArr.push([e.latlng.lat, e.latlng.lng]);
   }
 
+  //路线显示的开关函数
   _deleteLineFunction(e) {
     if (e.key !== 'q') return;
     this.#map.off('mousemove', this._onMouseMoveHandler);
@@ -650,6 +662,64 @@ class App {
       }).addTo(this.#map);
       this.#isShowLine = true;
     }
+  }
+
+  //折线表控制函数
+  _polyLineFun(e) {
+    let currentNumberX = 0;
+    this.#workouts.forEach(() => {
+      currentNumberX++;
+      this.#lineX.push(currentNumberX);
+    });
+
+    const trace = {
+      x: this.#lineX,
+      y: this.#lineY,
+      mode: 'lines+markers',
+      name: '示例线',
+    };
+    const layout = { title: '折线图示例' };
+    Plotly.newPlot(polyLine, [trace], layout);
+  }
+  _polyLineYArr() {
+    this.#workouts.forEach(arr => {
+      this.#lineY.push(arr.distance);
+    });
+  }
+
+  //管理折线图显示与否的函数
+  _polyLineShow(e) {
+    if (e.key === 'P') {
+      //触发lineY计算的函数
+      this.#lineY = [];
+      this._polyLineYArr();
+      console.log(this.#lineY);
+      console.log(this.#lineX);
+      this._polyLineFun();
+
+      this.#isShowPolyLine = !this.#isShowPolyLine;
+      if (this.#isShowPolyLine) {
+        polyLine.classList.remove('displaytoggle');
+        this._polyLineShowOpacity();
+        void polyLine.offsetWidth;
+        polyLine.classList.remove('active');
+      } else {
+        polyLine.classList.add('active');
+        this._polyLineShowOpacity();
+      }
+    }
+  }
+  //管理折线图显示与否的函数
+  _polyLineShowOpacity() {
+    polyLine.addEventListener('transitionend', () => {
+      if (this.#isShowPolyLine) {
+        if (polyLine.classList.contains('displaytoggle')) {
+          polyLine.classList.remove('displaytoggle');
+        }
+      } else {
+        polyLine.classList.add('displaytoggle');
+      }
+    });
   }
 }
 

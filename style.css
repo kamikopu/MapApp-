@@ -365,3 +365,26 @@ a:visited {
 .twitter-link:active {
   color: var(--color-light--2);
 }
+
+.poly-line{
+  position:absolute;
+ 
+  background-color: #c1d9ce;
+  top: 25%;
+  left: 30%;
+  z-index: 9999;
+  border-radius: 15px;
+  transition: all 0.3s ease-in-out;
+  opacity: 1;
+  
+}
+
+.displaytoggle{
+   display: none;
+}
+
+
+.poly-line.active{
+  opacity: 0;
+  top: 20%;
+}
